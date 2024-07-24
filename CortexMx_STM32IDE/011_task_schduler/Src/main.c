@@ -1,0 +1,109 @@
+//#include "stm32f4xx.h"                  // Device header
+#include "stdint.h"
+
+
+void SysTick_Handler(void);
+void PendSV_Handler(void);
+
+__attribute__((naked)) void init_scheduler_stack(uint32_t scheduler_stack_start);
+
+void task1_handler(void);
+void task2_handler(void);
+void task3_handler(void);
+void task4_handler(void);
+
+/* Some stack memory calculations */
+#define SIZE_STASK_STACK 		1024U
+#define SIZE_SCHED_STACK		1024U
+
+#define SRAM_START					0x20000000U
+#define SIZE_SRAM						((128)*(1024))
+#define SRAM_END						SRAM_START + SIZE_SRAM
+
+#define T1_STACK_START			SRAM_END
+#define T2_STACK_START			(SRAM_END - (1* (SIZE_STASK_STACK)))
+#define T3_STACK_START			(SRAM_END - (2* (SIZE_STASK_STACK)))
+#define T4_STACK_START			(SRAM_END - (3* (SIZE_STASK_STACK)))
+#define SCHED_STACK_START		(SRAM_END - (4* (SIZE_STASK_STACK)))
+
+#define STICK_HZ 					1000U
+#define HSI_CLK 					16000000U
+#define SYSTICK_TIM_CLK		HSI_CLK
+
+void init_systick_timer(uint32_t tick_hz);
+
+int main(void)
+{
+	init_systick_timer(STICK_HZ);
+	init_scheduler_stack(SCHED_STACK_START);
+	while(1)
+	{}
+	// return 0;
+}
+
+void init_systick_timer(uint32_t tick_hz)
+{
+	uint32_t *pSCSR = (uint32_t *)0xE000E010;
+	uint32_t *pSRVR = (uint32_t *)0xE000E014;
+
+	uint32_t count_value = (SYSTICK_TIM_CLK/tick_hz) - 1;
+
+	// Clear the value of SRVR
+	*pSRVR &= ~(0x00FFFFFFFF);
+	// load the value into SRVR
+	*pSRVR |= count_value;
+
+	// setting SCSR
+	*pSCSR |= (1<<1); // enable SysTick exception request
+	*pSCSR |= (1<<2); // indicates the clock soures, processor clock source
+	// enable the Systick
+	*pSCSR |= (1<<0);
+}
+
+__attribute__((naked)) void init_scheduler_stack(uint32_t sched_top_of_stack)
+{
+	__asm volatile ("MOV r0,%0": : "r"(sched_top_of_stack) :);
+
+	__asm volatile ("BX LR");
+}
+
+void SysTick_Handler(void)
+{
+
+}
+
+void PendSV_Handler(void)
+{
+
+}
+
+void task1_handler(void)
+{
+	while(1)
+	{
+
+	}
+}
+void task2_handler(void)
+{
+	while(1)
+	{
+
+	}
+}
+void task3_handler(void)
+{
+	while(1)
+	{
+
+	}
+}
+void task4_handler(void)
+{
+	while(1)
+	{
+
+	}
+}
+
+//
