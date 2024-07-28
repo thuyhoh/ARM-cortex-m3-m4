@@ -11,7 +11,7 @@ int main(void)
 {
 	enable_processor_faults();
 	
-	init_scheduler_stack(SCHED_STACK_START);
+	init_scheduler_stack(SCHED_STACK_START); // 1ms
 	
 	init_tasks_stack();
 	led_init_all();
@@ -96,7 +96,7 @@ void update_next_task(void)
 {
 	uint16_t i;
 	uint8_t state = TASK_BLOCK_STATE;
-	for(i = 0; i< (MAX_TASK); i++)
+	for(i = 1; i< (MAX_TASK); i++)
 	{
 		current_task++;
 		current_task = current_task % MAX_TASK;
@@ -165,7 +165,7 @@ void SysTick_Handler(void)
 	PendSVhandler_active();
 }
 
-void PendSV_Handler(void)
+__attribute__((naked)) void PendSV_Handler(void)
 {
 	/*Save the context of current task*/
 	// 1. get current running task's PSP value
@@ -214,9 +214,9 @@ void task1_handler(void)
 	while(1)
 	{
 		led_on(LED_ORANGE);
-		delay(DELAY_COUNT_500MS);
+		task_delay(500);
 		led_off(LED_ORANGE);
-		delay(DELAY_COUNT_500MS);
+		task_delay(500);
 	}
 }
 void task2_handler(void)
@@ -224,9 +224,9 @@ void task2_handler(void)
 	while(1)
 	{
 		led_on(LED_BLUE);
-		delay(DELAY_COUNT_250MS);
+		task_delay(250);
 		led_off(LED_BLUE);
-		delay(DELAY_COUNT_250MS);
+		task_delay(250);
 	}
 }
 void task3_handler(void)
@@ -234,9 +234,9 @@ void task3_handler(void)
 	while(1)
 	{
 		led_on(LED_RED);
-		delay(DELAY_COUNT_125MS);
+		task_delay(125);
 		led_off(LED_RED);
-		delay(DELAY_COUNT_125MS);
+		task_delay(125);
 	}
 }
 void task4_handler(void)
@@ -244,9 +244,9 @@ void task4_handler(void)
 	while(1)
 	{
 		led_on(LED_GREEN);
-		delay(DELAY_COUNT_1S);
+		task_delay(DELAY_COUNT_1S);
 		led_off(LED_GREEN);
-		delay(DELAY_COUNT_1S);
+		task_delay(DELAY_COUNT_1S);
 	}
 }
 

@@ -5,7 +5,7 @@ static TCB_t user_tasks[MAX_TASK];
 void PendSVhandler_set_Priority(uint8_t priority);
 void PendSVhandler_active(void);
 
-static uint8_t  current_task = 0;
+static uint8_t  current_task = 1;
 static uint32_t g_tick_count = 0;
 int main(void)
 {
@@ -114,15 +114,15 @@ void save_PSP_value(uint32_t current_PSP_value)
 __attribute__((naked)) void witch_sp_to_PSP(void)
 {
 	// 1 init the PSP with TASK1 start address
-	__ASM volatile ("PUSH {LR}");				 // preserve LR which connect back to main()
-	__ASM volatile ("BL get_PSP_value");
-	__ASM volatile ("MSR PSP, R0");		 // Initialize PSP
-	__ASM volatile ("POP {LR}");				 // pop back LR value
+	__asm volatile ("PUSH {LR}");				 // preserve LR which connect back to main()
+	__asm volatile ("BL get_PSP_value");
+	__asm volatile ("MSR PSP, R0");		 // Initialize PSP
+	__asm volatile ("POP {LR}");				 // pop back LR value
 	
 	// 2 change SP to PSP using CONTROL register
-	__ASM volatile ("MOV R0, #0x02");
-	__ASM volatile ("MSR CONTROL, R0");
-	__ASM volatile ("BX LR");
+	__asm volatile ("MOV R0, #0x02");
+	__asm volatile ("MSR CONTROL, R0");
+	__asm volatile ("BX LR");
 }
 
 void PendSVhandler_set_Priority(uint8_t priority)
@@ -169,24 +169,24 @@ void PendSV_Handler(void)
 {
 	/*Save the context of current task*/
 	// 1. get current running task's PSP value
-	__ASM volatile("MRS R0, PSP");
+	__asm volatile("MRS R0, PSP");
 	// 2. using that PSP value store SF2(R4-r11)
-	__ASM volatile("STMDB R0!, {R4- R11}");
-	__ASM volatile("PUSH {LR}");
+	__asm volatile("STMDB R0!, {R4- R11}");
+	__asm volatile("PUSH {LR}");
 	// 3. save the current value of PSP
-	__ASM volatile("BL save_PSP_value");
+	__asm volatile("BL save_PSP_value");
 	
 	/* retrieve the context of next task*/
 	// 1. Decide next task to run
-	__ASM volatile("BL update_next_task");
+	__asm volatile("BL update_next_task");
 	// 2. get its past PSP value
-	__ASM volatile("BL get_PSP_value");
+	__asm volatile("BL get_PSP_value");
 	// 3. using that PSP value retrieve SP2(R4- R11)
-	__ASM volatile ("POP {LR}");
-	__ASM volatile("LDMIA R0!, {R4-R11}");
+	__asm volatile ("POP {LR}");
+	__asm volatile("LDMIA R0!, {R4-R11}");
 	// 4. upadate PSP and exit
-	__ASM volatile ("MSR PSP, R0");
-	__ASM volatile ("BX LR");
+	__asm volatile ("MSR PSP, R0");
+	__asm volatile ("BX LR");
 }
 
 void schedule(void)
@@ -250,7 +250,24 @@ void task4_handler(void)
 	}
 }
 
-//
+void init_systick_timer(uint32_t Tick)
+{
+	uint32_t *pSCSR = (uint32_t *)0xE000E010;
+	uint32_t *pSRVR = (uint32_t *)0xE000E014;
+
+	uint32_t count_value = (SYSTICK_TIM_CLK/Tick) - 1;
+	
+	// Clear the value of SRVR
+	*pSRVR &= ~(0x00FFFFFFFF);
+	// load the value into SRVR
+	*pSRVR |= count_value;
+	
+	// setting SCSR
+	*pSCSR |= (1<<2); // indicates the clock soures, processor clock source
+	*pSCSR |= (1<<1); // enable SysTick exception request
+	// enable the Systick
+	*pSCSR |= (1<<0);
+}
 
 void HardFault_Handler(void)
 {

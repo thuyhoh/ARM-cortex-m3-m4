@@ -1,20 +1,24 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#include "stm32f4xx.h"                  // Device header
+//#include "stm32f4xx.h"                  // Device header
 #include "stdint.h"
-#include "Systick_Timer.h"
 #include "led.h"
 
 #define MAX_TASK 5
 
-#define INTERRUPT_DISABLE()  do{__ASM volatile ("MOV R0,#0x1"); __ASM volatile("MSR PRIMASK,R0"); } while(0)
+#define STICK_HZ 					1000U
+#define HSI_CLK 					16000000U
+#define SYSTICK_TIM_CLK		HSI_CLK
 
-#define INTERRUPT_ENABLE()  do{__ASM volatile ("MOV R0,#0x0"); __ASM volatile("MSR PRIMASK,R0"); } while(0)	
+#define INTERRUPT_DISABLE()  do{__asm volatile ("MOV R0,#0x1"); __asm volatile("MSR PRIMASK,R0"); } while(0)
+
+#define INTERRUPT_ENABLE()  do{__asm volatile ("MOV R0,#0x0"); __asm volatile("MSR PRIMASK,R0"); } while(0)	
 
 void enable_processor_faults(void);
 
 /* handler function */
+void init_systick_timer(uint32_t Tick);
 void SysTick_Handler(void);
 void PendSV_Handler(void);
 void HardFault_Handler(void);
